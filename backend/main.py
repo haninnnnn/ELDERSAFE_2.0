@@ -2,6 +2,7 @@ from fastapi import FastAPI, WebSocket, WebSocketDisconnect
 from fastapi.middleware.cors import CORSMiddleware
 from contextlib import asynccontextmanager
 import asyncio, cv2, base64, json, time, os
+from threading import Lock
 
 from backend.config import settings
 from backend.db.session import init_db, SessionLocal
@@ -19,6 +20,7 @@ current_fps = 0.0
 current_source = settings.camera_source
 person_states: dict[int, PersonState] = {}
 _ws_clients: list[WebSocket] = []
+_clients_lock = Lock()
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -89,14 +91,16 @@ async def _db_write(event_type, channel, status, error, track_id, severity, snap
 async def ws_feed(ws: WebSocket):
     origin = ws.headers.get("origin", "")
     await ws.accept()
-    _ws_clients.append(ws)
+    with _clients_lock:
+        _ws_clients.append(ws)
 
     try:
         src = FrameSource()
     except RuntimeError as e:
         await ws.send_text(json.dumps({"error": str(e), "persons": [], "fps": 0,
                                        "timestamp": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())}))
-        _ws_clients.remove(ws)
+        with _clients_lock:
+            _ws_clients.remove(ws)
         await ws.close()
         return
 
@@ -168,7 +172,8 @@ async def ws_feed(ws: WebSocket):
     except WebSocketDisconnect:
         pass
     finally:
-        _ws_clients.remove(ws)
+        with _clients_lock:
+            _ws_clients.remove(ws)
         src.release()
         db.close()
 

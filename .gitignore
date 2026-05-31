@@ -1,1 +1,12 @@
 *.mp4
+__pycache__/
+*.pyc
+.venv/
+venv/
+*.egg-info/
+dist/
+build/
+.env
+*.db
+node_modules/
+.DS_Store

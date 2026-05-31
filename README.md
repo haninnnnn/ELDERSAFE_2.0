@@ -6,17 +6,17 @@ Real-time elderly safety monitoring system using YOLOv8-Pose.
 
 ```bash
 # 1. Setup Python environment
-cd eldersafe
+cd ELDERSAFE_2.0
 python -m venv .venv
-.venv\Scripts\activate        # Windows
-# source .venv/bin/activate   # Linux/Mac
+source .venv/bin/activate    # Linux/Mac
+# .venv\Scripts\activate     # Windows
 
 # 2. Install dependencies
 pip install -r requirements.txt
 
 # 3. Configure environment
-copy .env.example .env        # Windows
-# cp .env.example .env        # Linux/Mac
+cp .env.example .env        # Linux/Mac
+# copy .env.example .env    # Windows
 # Edit .env with your credentials
 
 # 4. Start backend
@@ -59,8 +59,8 @@ docker compose up --build
 
 ## Project Structure
 
-```
-eldersafe/
+```text
+ELDERSAFE_2.0/
 ├── backend/
 │   ├── main.py              # FastAPI app + WebSocket
 │   ├── config.py            # Settings from .env
@@ -91,3 +91,10 @@ eldersafe/
 ├── Dockerfile.backend
 └── docker-compose.yml
 ```
+
+## Key Files
+
+- [requirements.txt](requirements.txt) — Python dependencies
+- [.env.example](.env.example) — Environment variable template
+- [docker-compose.yml](docker-compose.yml) — Docker orchestration
+- [Dockerfile.backend](Dockerfile.backend) — Backend container image

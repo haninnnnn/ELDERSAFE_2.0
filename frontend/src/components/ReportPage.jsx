@@ -2,7 +2,46 @@ import { useState, useRef } from "react";
 import PDFReportButton from "./PDFReportButton";
 import "./Report.css";
 
-const API = "http://localhost:8000/api";
+import { API_BASE } from "../config"; const API = API_BASE;
+
+const AlertIcon = () => (
+  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <polygon points="7.86 2 16.14 2 22 7.86 22 16.14 16.14 22 7.86 22 2 16.14 2 7.86 7.86 2"/>
+    <line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
+  </svg>
+);
+
+const VideoIcon = () => (
+  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <rect x="2" y="2" width="20" height="20" rx="2.18" ry="2.18"/>
+    <line x1="7" y1="2" x2="7" y2="22"/><line x1="17" y1="2" x2="17" y2="22"/>
+    <line x1="2" y1="12" x2="22" y2="12"/><line x1="2" y1="7" x2="22" y2="7"/>
+    <line x1="2" y1="17" x2="22" y2="17"/>
+  </svg>
+);
+
+const DownloadIcon = () => (
+  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+    <polyline points="7 10 12 15 17 10"/>
+    <line x1="12" y1="15" x2="12" y2="3"/>
+  </svg>
+);
+
+const WarningIcon = () => (
+  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <circle cx="12" cy="12" r="10"/>
+    <line x1="12" y1="8" x2="12" y2="12"/>
+    <line x1="12" y1="16" x2="12.01" y2="16"/>
+  </svg>
+);
+
+const CheckCircleIcon = () => (
+  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
+    <polyline points="22 4 12 14.01 9 11.01"/>
+  </svg>
+);
 
 function fmt(secs) {
   const h = Math.floor(secs/3600), m = Math.floor((secs%3600)/60), s = Math.floor(secs%60);
@@ -58,7 +97,7 @@ export default function ReportPage() {
 
   return (
     <div className="report-page">
-      <h2>📊 Video Report</h2>
+      <h2><AlertIcon /> Video Report</h2>
       <div className="upload-box">
         <input type="file" accept="video/*" onChange={e => setFile(e.target.files[0])} />
         <button className="btn btn-start" onClick={handleRun}
@@ -74,14 +113,14 @@ export default function ReportPage() {
           <p className="muted">{progress || "Running YOLO inference…"}</p>
         </div>
       )}
-      {status === "error" && <p className="error-msg">❌ {progress || "Something went wrong."}</p>}
+      {status === "error" && <p className="error-msg"><WarningIcon /> {progress || "Something went wrong."}</p>}
 
       {/* Annotated video player */}
       {status === "done" && jobId && (
         <div className="card" style={{ marginBottom: 16 }}>
           <div className="card-header">
-            <span className="card-title">🎬 Annotated Output</span>
-            <a href={`${API}/report/video/${jobId}`} download className="ack-btn">⬇ Download</a>
+            <span className="card-title"><VideoIcon /> Annotated Output</span>
+            <a href={`${API}/report/video/${jobId}`} download className="ack-btn"><DownloadIcon /> Download</a>
           </div>
           <video controls style={{ width: "100%", borderRadius: 8, background: "#000" }}
                  src={`${API}/report/video/${jobId}`} />
@@ -103,8 +142,8 @@ function ReportView({ report }) {
       <div className="summary-row">
         <StatCard label="Duration"    value={fmt(report.duration_s)} />
         <StatCard label="Persons"     value={report.persons} />
-        <StatCard label="🚨 Falls"    value={critEvents.length} accent="#f85149" />
-        <StatCard label="⚠️ Warnings" value={warnEvents.length} accent="#d29922" />
+        <StatCard label="Falls"    value={critEvents.length} accent="#f85149" icon={<AlertIcon />} />
+        <StatCard label="Warnings" value={warnEvents.length} accent="#d29922" icon={<WarningIcon />} />
       </div>
 
       {/* Per-person stats + activity bars */}
@@ -159,28 +198,29 @@ function ReportView({ report }) {
         );
       })}
 
-      {critEvents.length > 0 && <EventTable title="🚨 Fall Events" events={critEvents} color="#f85149" />}
-      {warnEvents.length > 0 && <EventTable title="⚠️ Warning Events" events={warnEvents} color="#d29922" />}
+      {critEvents.length > 0 && <EventTable title="Fall Events" events={critEvents} color="#f85149" icon={<AlertIcon />} />}
+      {warnEvents.length > 0 && <EventTable title="Warning Events" events={warnEvents} color="#d29922" icon={<WarningIcon />} />}
       {critEvents.length === 0 && warnEvents.length === 0 && (
-        <p className="all-clear">✅ No critical or warning events detected.</p>
+        <p className="all-clear"><CheckCircleIcon /> No critical or warning events detected.</p>
       )}
     </div>
   );
 }
 
-function StatCard({ label, value, accent }) {
+function StatCard({ label, value, accent, icon }) {
   return (
     <div className="stat-card">
+      <div className="stat-icon" style={accent ? { color: accent } : {}}>{icon}</div>
       <div className="stat-value" style={accent ? { color: accent } : {}}>{value}</div>
       <div className="stat-label">{label}</div>
     </div>
   );
 }
 
-function EventTable({ title, events, color }) {
+function EventTable({ title, events, color, icon }) {
   return (
     <div className="event-table">
-      <h4 style={{ color }}>{title}</h4>
+      <h4 style={{ color }}>{icon} {title}</h4>
       <table>
         <thead><tr><th>Person</th><th>Type</th><th>Start</th><th>End</th><th>Duration</th></tr></thead>
         <tbody>

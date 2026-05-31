@@ -1,6 +1,12 @@
 import { useState, useEffect } from "react";
 
-const API = "http://localhost:8000/api";
+import { API_BASE } from "../config"; const API = API_BASE;
+
+const ChartIcon = () => (
+  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/>
+  </svg>
+);
 
 const ACT_COLOR = {
   fall: "#f85149", sleeping: "#d29922", inactivity: "#bc8cff",
@@ -61,7 +67,7 @@ export default function ActivityTimeline() {
   return (
     <div className="card timeline-card">
       <div className="card-header">
-        <span className="card-title">📈 Activity Timeline</span>
+        <span className="card-title"><ChartIcon /> Activity Timeline</span>
         <select className="sel" value={selId} onChange={e => setSelId(e.target.value)}>
           <option value="all">All persons</option>
           {persons.map(p => <option key={p.track_id} value={p.track_id}>{labelFor(p.track_id)}</option>)}

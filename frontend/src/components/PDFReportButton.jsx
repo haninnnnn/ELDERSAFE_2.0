@@ -1,6 +1,14 @@
 import { useState } from "react";
 
-const API = "http://localhost:8000/api";
+import { API_BASE } from "../config"; const API = API_BASE;
+
+const DownloadIcon = () => (
+  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{display:"inline-block",verticalAlign:"middle",marginRight:6}}>
+    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+    <polyline points="7 10 12 15 17 10"/>
+    <line x1="12" y1="15" x2="12" y2="3"/>
+  </svg>
+);
 
 const ACT_COLOR = {
   fall: "#f85149", sleeping: "#d29922", inactivity: "#bc8cff",
@@ -43,7 +51,7 @@ export default function PDFReportButton({ report, videoName }) {
     doc.setFillColor(15, 17, 23);
     doc.rect(0, 0, W, 28, "F");
     doc.setFontSize(18); doc.setTextColor(255,255,255); doc.setFont("helvetica","bold");
-    doc.text("🛡 ElderSafe — Video Analysis Report", margin, 12);
+    doc.text("[ ElderSafe ] Video Analysis Report", margin, 12);
     doc.setFontSize(9); doc.setTextColor(180,180,180); doc.setFont("helvetica","normal");
     doc.text(`Generated: ${new Date().toLocaleString()}  |  File: ${videoName || "—"}`, margin, 20);
     y = 36;
@@ -93,7 +101,7 @@ export default function PDFReportButton({ report, videoName }) {
   return (
     <button className="btn btn-start" style={{ opacity: report ? 1 : 0.4 }}
             disabled={!report || generating} onClick={generate}>
-      {generating ? "Generating…" : "⬇ Download PDF"}
+      {generating ? "Generating..." : <><DownloadIcon /> Download PDF</>}
     </button>
   );
 }

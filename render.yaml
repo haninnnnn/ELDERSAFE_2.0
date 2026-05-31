@@ -1,0 +1,20 @@
+# Render Blueprint - Use this to deploy to Render.com
+# 1. Go to https://render.com/blueprints
+# 2. Connect your GitHub repo or upload this file
+# 3. Click "New Blueprint Instance"
+
+services:
+  - type: web
+    name: eldersafe-backend
+    env: python
+    region: oregon
+    plan: free
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn backend.main:app --host 0.0.0.0 --port $PORT
+    envVars:
+      - key: CAMERA_SOURCE
+        value: "0"
+      - key: DB_URL
+        value: "sqlite:///eldersafe.db"
+      - key: LOG_LEVEL
+        value: "INFO"

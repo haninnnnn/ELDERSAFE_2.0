@@ -1,6 +1,8 @@
-from pydantic_settings import BaseSettings
+from pydantic_settings import BaseSettings, SettingsConfigDict
 
 class Settings(BaseSettings):
+    model_config = SettingsConfigDict(env_file=".env")
+
     camera_source: str = "0"
     yolo_model: str = "yolov8n-pose.pt"
     database_url: str = "sqlite:///./eldersafe.db"
@@ -21,8 +23,5 @@ class Settings(BaseSettings):
     alert_cooldown_inactivity_s: int = 300
     sleep_hours_start: int = 22
     sleep_hours_end: int = 7
-
-    class Config:
-        env_file = ".env"
 
 settings = Settings()

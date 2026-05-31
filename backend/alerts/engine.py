@@ -1,23 +1,24 @@
 import asyncio
 import time
+from typing import Callable, Optional
 from backend.config import settings
 from backend.alerts.email_alert import send_email
 from backend.alerts.push_alert import send_push
 
-COOLDOWNS = {
+COOLDOWNS: dict[str, int] = {
     "fall":       settings.alert_cooldown_fall_s,
     "sleeping":   settings.alert_cooldown_sleeping_s,
     "inactivity": settings.alert_cooldown_inactivity_s,
 }
 
-SEVERITY = {
+SEVERITY: dict[str, str] = {
     "fall":       "critical",
     "sleeping":   "warning",
     "inactivity": "warning",
     "anomalous":  "info",
 }
 
-async def dispatch_alert(state, event_type: str, db_write_fn=None, snapshot_path: str = None):
+async def dispatch_alert(state, event_type: str, db_write_fn: Optional[Callable] = None, snapshot_path: Optional[str] = None):
     now = time.time()
     cooldown = COOLDOWNS.get(event_type, 300)
     if now - state.last_alert.get(event_type, 0) < cooldown:

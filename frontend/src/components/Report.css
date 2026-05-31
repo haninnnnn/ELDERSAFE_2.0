@@ -1,5 +1,5 @@
 .report-page { padding: 20px; max-width: 900px; margin: auto; }
-.report-page h2 { font-size: 1.2rem; margin-bottom: 16px; }
+.report-page h2 { font-size: 1.2rem; margin-bottom: 16px; display: flex; align-items: center; gap: 8px; }
 
 .upload-box { display: flex; align-items: center; gap: 12px; margin-bottom: 16px;
               background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 14px; }
@@ -10,13 +10,14 @@
                 border-radius: 2px; animation: slide 1.5s infinite; }
 @keyframes slide { 0%{width:0%} 50%{width:70%} 100%{width:100%} }
 
-.error-msg { color: var(--red); font-size: 13px; margin-bottom: 12px; }
-.all-clear  { color: var(--green); font-size: 14px; margin-top: 16px; }
+.error-msg { color: var(--red); font-size: 13px; margin-bottom: 12px; display: flex; align-items: center; gap: 6px; }
+.all-clear  { color: var(--olive); font-size: 14px; margin-top: 16px; display: flex; align-items: center; gap: 6px; }
 
 /* Summary */
 .summary-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-bottom: 16px; }
 .stat-card { background: var(--surface); border: 1px solid var(--border); border-radius: 8px;
-             padding: 14px; text-align: center; }
+             padding: 14px; text-align: center; display: flex; flex-direction: column; align-items: center; }
+.stat-icon { margin-bottom: 4px; }
 .stat-value { font-size: 1.6rem; font-weight: 700; }
 .stat-label { font-size: 11px; color: var(--muted); margin-top: 4px; }
 

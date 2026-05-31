@@ -1,6 +1,5 @@
 import { useEffect, useRef, useState, useCallback } from "react";
-
-const API = "http://localhost:8000/api";
+import { API_BASE, WS_BASE } from "../config";
 
 export function useElderSafe() {
   const wsRef = useRef(null);
@@ -17,7 +16,7 @@ export function useElderSafe() {
       wsRef.current.onclose = null;
       wsRef.current.close();
     }
-    const ws = new WebSocket("ws://localhost:8000/ws/feed");
+    const ws = new WebSocket(WS_BASE);
     wsRef.current = ws;
     ws.onopen  = () => { setConnected(true); if (reconnectRef.current) { clearTimeout(reconnectRef.current); reconnectRef.current = null; } };
     ws.onclose = () => {
@@ -52,8 +51,12 @@ export function useElderSafe() {
   }, []);
 
   const fetchEvents = useCallback(async () => {
-    const res = await fetch(`${API}/events?limit=20`);
-    setEvents(await res.json());
+    try {
+      const res = await fetch(`${API_BASE}/events?limit=20`);
+      if (res.ok) setEvents(await res.json());
+    } catch (e) {
+      // Backend not available - this is expected in demo mode
+    }
   }, []);
 
   useEffect(() => {
@@ -63,17 +66,17 @@ export function useElderSafe() {
   }, [fetchEvents]);
 
   const ackEvent = useCallback(async (id) => {
-    await fetch(`${API}/events/${id}/acknowledge`, { method: "PATCH" });
+    await fetch(`${API_BASE}/events/${id}/acknowledge`, { method: "PATCH" });
     fetchEvents();
   }, [fetchEvents]);
 
   const startStream = async () => {
-    await fetch(`${API}/stream/start`, { method: "POST" });
+    await fetch(`${API_BASE}/stream/start`, { method: "POST" });
     connect();
   };
 
   const stopStream = async () => {
-    await fetch(`${API}/stream/stop`, { method: "POST" });
+    await fetch(`${API_BASE}/stream/stop`, { method: "POST" });
     disconnect();
   };
 

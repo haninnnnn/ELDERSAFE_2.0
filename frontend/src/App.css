@@ -60,9 +60,17 @@ header {
 .status-pill {
   font-size: 11px; padding: 3px 11px; border-radius: 20px;
   font-weight: 700; letter-spacing: .3px;
+  display: flex; align-items: center; gap: 6px;
+}
+.status-dot {
+  width: 6px; height: 6px; border-radius: 50%;
+  background: currentColor;
 }
 .status-pill.online  { background: rgba(107,124,74,.35); color: #c8e6a0; border: 1px solid rgba(138,154,91,.5); }
 .status-pill.offline { background: rgba(192,57,43,.35);  color: #ffb3ae; border: 1px solid rgba(192,57,43,.5); }
+.status-pill.offline .status-dot { background: var(--red); }
+.status-pill.online .status-dot  { background: #8BC34A; animation: blink 1.5s infinite; }
+@keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
 
 /* ── Tabs ───────────────────────────────────────────────────────── */
 .tabs { display: flex; gap: 2px; }
@@ -72,15 +80,17 @@ header {
   padding: 6px 16px; border-radius: 8px;
   font-family: "Nunito", sans-serif;
   font-size: 13px; font-weight: 600; cursor: pointer; transition: all .18s;
+  display: flex; align-items: center; gap: 6px;
 }
 .tab:hover  { background: rgba(253,248,240,.12); color: var(--cream); }
 .tab.active {
   background: rgba(253,248,240,.18); color: var(--cream);
   box-shadow: inset 0 -2px 0 var(--bg2);
 }
+.tab svg { flex-shrink: 0; }
 .tab-badge {
   background: var(--red); color: #fff; font-size: 10px; font-weight: 800;
-  padding: 1px 6px; border-radius: 10px; margin-left: 5px;
+  padding: 1px 6px; border-radius: 10px; margin-left: 2px;
   animation: pulse 1.5s infinite;
 }
 @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.55} }
@@ -130,6 +140,10 @@ main.grid {
 .empty {
   color: var(--muted); font-size: 13px;
   padding: 20px 0; text-align: center;
+}
+.empty-icon {
+  font-size: 2rem; margin-bottom: 8px;
+  display: flex; justify-content: center; color: var(--olive);
 }
 
 /* ── Live Feed ──────────────────────────────────────────────────── */

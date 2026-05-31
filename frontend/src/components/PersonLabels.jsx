@@ -1,6 +1,32 @@
 import { useState, useEffect } from "react";
 
-const API = "http://localhost:8000/api";
+import { API_BASE } from "../config"; const API = API_BASE;
+
+const TagIcon = () => (
+  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/>
+    <line x1="7" y1="7" x2="7.01" y2="7"/>
+  </svg>
+);
+
+const EditIcon = () => (
+  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+    <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+  </svg>
+);
+
+const SaveIcon = () => (
+  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+    <polyline points="20 6 9 17 4 12"/>
+  </svg>
+);
+
+const CloseIcon = () => (
+  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+  </svg>
+);
 
 export default function PersonLabels() {
   const [persons, setPersons] = useState([]);
@@ -24,7 +50,7 @@ export default function PersonLabels() {
   return (
     <div className="card">
       <div className="card-header">
-        <span className="card-title">🏷 Person Labels</span>
+        <span className="card-title"><TagIcon /> Person Labels</span>
         <span className="count-badge">{persons.length}</span>
       </div>
       {persons.length === 0 ? <p className="empty">No persons tracked yet</p> : (
@@ -47,9 +73,9 @@ export default function PersonLabels() {
                 <td className="muted small">{p.first_seen ? new Date(p.first_seen).toLocaleDateString() : "—"}</td>
                 <td>
                   {editing === p.track_id
-                    ? <><button className="ack-btn" onClick={() => save(p.track_id)}>✓ Save</button>
-                        <button className="ack-btn" style={{marginLeft:4}} onClick={() => setEditing(null)}>✕</button></>
-                    : <button className="ack-btn" onClick={() => { setEditing(p.track_id); setDraft(p.label || ""); }}>✎ Edit</button>
+                    ? <><button className="ack-btn" onClick={() => save(p.track_id)}><SaveIcon /> Save</button>
+                        <button className="ack-btn" style={{marginLeft:4}} onClick={() => setEditing(null)}><CloseIcon /></button></>
+                    : <button className="ack-btn" onClick={() => { setEditing(p.track_id); setDraft(p.label || ""); }}><EditIcon /> Edit</button>
                   }
                 </td>
               </tr>
