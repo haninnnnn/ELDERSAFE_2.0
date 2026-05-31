@@ -15,7 +15,7 @@ class PoseDetector:
         self.model = YOLO(settings.yolo_model)
 
     def detect(self, frame) -> list[Detection]:
-        results = self.model.track(frame, persist=True, verbose=False)
+        results = self.model.track(frame, persist=True, verbose=False, conf=0.55, classes=[0])
         detections = []
         if results[0].boxes is None:
             return detections

@@ -1,4 +1,4 @@
-export default function LiveFeed({ imgRef, fps, connected }) {
+export default function LiveFeed({ imgSrc, fps, connected }) {
   return (
     <div className="card feed-card">
       <div className="card-header">
@@ -8,12 +8,10 @@ export default function LiveFeed({ imgRef, fps, connected }) {
         </span>
       </div>
       <div className="feed-wrapper">
-        <img ref={imgRef} alt="live feed" className="feed-img" />
-        {!connected && (
-          <div className="feed-overlay">
-            <span>⚠ Camera disconnected</span>
-          </div>
-        )}
+        {imgSrc
+          ? <img src={imgSrc} alt="live feed" className="feed-img" />
+          : <div className="feed-overlay"><span>⚠ Camera disconnected</span></div>
+        }
       </div>
     </div>
   );

@@ -39,4 +39,5 @@ async def dispatch_alert(state, event_type: str, db_write_fn=None, snapshot_path
             status = "failed" if isinstance(res, Exception) else "sent"
             err = str(res) if isinstance(res, Exception) else None
             await db_write_fn(event_type=event_type, channel=ch, status=status, error=err,
-                              track_id=state.track_id, severity=SEVERITY.get(event_type, "info"))
+                              track_id=state.track_id, severity=SEVERITY.get(event_type, "info"),
+                              snapshot_path=snapshot_path)

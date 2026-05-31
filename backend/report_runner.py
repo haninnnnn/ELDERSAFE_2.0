@@ -141,18 +141,14 @@ def run_report(video_path: str, job_id: str, skip_frames: int = 2, on_progress=N
     }
 
 def _reencode(src: Path, dst: Path):
-    """Re-encode to H.264 using imageio/ffmpeg."""
-    try:
-        import imageio
-        reader = imageio.get_reader(str(src))
-        fps    = reader.get_meta_data().get("fps", 25)
-        writer = imageio.get_writer(str(dst), fps=fps, codec="libx264",
-                                    quality=6, macro_block_size=None)
-        for frame in reader:
-            writer.append_data(frame)
-        reader.close()
-        writer.close()
-    except Exception:
+    """Re-encode to H.264 using ffmpeg for browser playback."""
+    import subprocess
+    result = subprocess.run(
+        ["ffmpeg", "-y", "-i", str(src), "-vcodec", "libx264", "-pix_fmt", "yuv420p",
+         "-preset", "fast", "-crf", "23", str(dst)],
+        capture_output=True
+    )
+    if result.returncode != 0 or not dst.exists():
         import shutil
         shutil.copy(str(src), str(dst))
 

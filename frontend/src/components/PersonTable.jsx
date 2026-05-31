@@ -1,17 +1,23 @@
-const ICONS = { fall:"🚨", sleeping:"😴", inactivity:"💤", sitting:"🪑", standing:"🧍", walking:"🚶", anomalous:"❓", unknown:"❓" };
+const ICONS = {
+  fall:"🚨", sleeping:"😴", inactivity:"💤",
+  sitting:"🪑", standing:"🧍", walking:"🚶",
+  anomalous:"⚠️", unknown:"❓"
+};
 
 export default function PersonTable({ persons }) {
   return (
     <div className="card">
       <div className="card-header">
-        <span className="card-title">👥 Active Persons</span>
-        <span className="count-badge">{persons.length}</span>
+        <span className="card-title">👥 Detected Persons</span>
+        <span className="count-badge">{persons.length} active</span>
       </div>
       {persons.length === 0
-        ? <p className="empty">No persons detected</p>
+        ? <div className="empty"><div style={{fontSize:"1.8rem",marginBottom:6}}>👤</div>No persons in frame</div>
         : (
           <table>
-            <thead><tr><th>ID</th><th>Activity</th><th>Confidence</th></tr></thead>
+            <thead>
+              <tr><th>ID</th><th>Activity</th><th>Confidence</th></tr>
+            </thead>
             <tbody>
               {persons.map(p => (
                 <tr key={p.track_id}>
@@ -23,7 +29,7 @@ export default function PersonTable({ persons }) {
                   </td>
                   <td>
                     <div className="conf-bar-wrap">
-                      <div className="conf-bar" style={{width: `${((p.confidence||0)*100).toFixed(0)}%`}} />
+                      <div className="conf-bar" style={{width:`${((p.confidence||0)*80).toFixed(0)}px`}} />
                       <span>{p.confidence ? `${(p.confidence*100).toFixed(0)}%` : "—"}</span>
                     </div>
                   </td>

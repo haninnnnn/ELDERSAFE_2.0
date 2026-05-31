@@ -22,19 +22,65 @@ _ws_clients: list[WebSocket] = []
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
+    global pipeline_running
     init_db()
     os.makedirs("snapshots", exist_ok=True)
+    pipeline_running = True  # auto-start on boot
+    task = asyncio.create_task(_daily_report_scheduler())
     yield
+    task.cancel()
+
+async def _daily_report_scheduler():
+    """Send a daily summary email at 8 AM every day."""
+    while True:
+        now = time.localtime()
+        # seconds until next 08:00
+        secs_until = ((8 - now.tm_hour) % 24) * 3600 - now.tm_min * 60 - now.tm_sec
+        if secs_until <= 0:
+            secs_until += 86400
+        await asyncio.sleep(secs_until)
+        await _send_daily_report()
+
+async def _send_daily_report():
+    from backend.db.session import SessionLocal
+    from backend.db.models import Event, ActivityLog
+    from datetime import datetime, timedelta
+    db = SessionLocal()
+    try:
+        since = datetime.utcnow() - timedelta(hours=24)
+        events = db.query(Event).filter(Event.started_at >= since).all()
+        logs   = db.query(ActivityLog).filter(ActivityLog.frame_ts >= since).all()
+
+        fall_count     = sum(1 for e in events if e.event_type == "fall")
+        sleeping_count = sum(1 for e in events if e.event_type == "sleeping")
+        inact_count    = sum(1 for e in events if e.event_type == "inactivity")
+        total_events   = len(events)
+
+        subject = f"[ElderSafe] Daily Report — {datetime.now().strftime('%B %d, %Y')}"
+        body = (
+            f"ElderSafe Daily Summary\n"
+            f"Date: {datetime.now().strftime('%B %d, %Y')}\n\n"
+            f"Total Events : {total_events}\n"
+            f"Falls        : {fall_count}\n"
+            f"Sleeping     : {sleeping_count}\n"
+            f"Inactivity   : {inact_count}\n"
+            f"Activity Logs: {len(logs)}\n"
+        )
+        from backend.alerts.email_alert import send_email
+        await send_email(subject=subject, body=body, event_type="daily_report")
+    finally:
+        db.close()
 
 app = FastAPI(title="ElderSafe", lifespan=lifespan)
 app.add_middleware(CORSMiddleware, allow_origins=["*"], allow_methods=["*"], allow_headers=["*"])
 app.include_router(router)
 app.include_router(report_router)
 
-async def _db_write(event_type, channel, status, error, track_id, severity):
+async def _db_write(event_type, channel, status, error, track_id, severity, snapshot_path=None):
     db = SessionLocal()
     try:
-        ev = crud.create_event(db, track_id=track_id, event_type=event_type, severity=severity)
+        ev = crud.create_event(db, track_id=track_id, event_type=event_type, severity=severity,
+                               snapshot_path=snapshot_path)
         crud.log_alert(db, event_id=ev.id, channel=channel, status=status, error=error)
     finally:
         db.close()
@@ -74,8 +120,8 @@ async def ws_feed(ws: WebSocket):
             persons_out = []
             if pipeline_running:
                 frame_count += 1
-                # Run YOLO every 2nd frame to reduce CPU load
-                if frame_count % 2 != 0:
+                # Run YOLO on even frames to reduce CPU load
+                if frame_count % 2 == 0:
                     last_detections = detector.detect(frame)
                 detections = last_detections
                 for det in detections:
@@ -91,12 +137,10 @@ async def ws_feed(ws: WebSocket):
                     if activity != prev_activity:
                         state.activity = activity
                         state.activity_since = time.time()
-                        if activity in ("fall", "sleeping", "inactivity"):
-                            snap = None
-                            if activity == "fall":
-                                snap = f"snapshots/fall_{tid}_{int(time.time())}.jpg"
-                                cv2.imwrite(snap, frame)
-                            asyncio.create_task(dispatch_alert(state, activity, _db_write, snapshot_path=snap))
+                        if activity == "fall":
+                            snap = f"snapshots/fall_{tid}_{int(time.time())}.jpg"
+                            cv2.imwrite(snap, frame)
+                            asyncio.create_task(dispatch_alert(state, "fall", _db_write, snapshot_path=snap))
 
                     crud.log_activity(db, tid, activity, det.conf, det.bbox)
                     persons_out.append({"track_id": tid, "activity": activity,

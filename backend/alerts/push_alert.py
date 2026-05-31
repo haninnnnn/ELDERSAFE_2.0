@@ -1,3 +1,4 @@
+import asyncio
 import firebase_admin
 from firebase_admin import credentials, messaging
 from backend.config import settings
@@ -22,4 +23,5 @@ async def send_push(title: str, body: str):
         notification=messaging.Notification(title=title, body=body),
         token=settings.fcm_token,
     )
-    messaging.send(msg)
+    loop = asyncio.get_event_loop()
+    await loop.run_in_executor(None, messaging.send, msg)

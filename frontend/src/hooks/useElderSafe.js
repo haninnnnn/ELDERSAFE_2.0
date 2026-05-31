@@ -3,36 +3,53 @@ import { useEffect, useRef, useState, useCallback } from "react";
 const API = "http://localhost:8000/api";
 
 export function useElderSafe() {
-  const imgRef    = useRef(null);
-  const wsRef     = useRef(null);
+  const wsRef = useRef(null);
+  const [imgSrc, setImgSrc]       = useState("");
   const [persons, setPersons]     = useState([]);
   const [fps, setFps]             = useState(0);
   const [events, setEvents]       = useState([]);
   const [connected, setConnected] = useState(false);
 
-  function connect() {
-    if (wsRef.current) wsRef.current.close();
-    const ws = new WebSocket(`ws://localhost:8000/ws/feed`);
+  const reconnectRef = useRef(null);
+
+  const connect = useCallback(() => {
+    if (wsRef.current) {
+      wsRef.current.onclose = null;
+      wsRef.current.close();
+    }
+    const ws = new WebSocket("ws://localhost:8000/ws/feed");
     wsRef.current = ws;
-    ws.onopen  = () => setConnected(true);
-    ws.onclose = () => { setConnected(false); setFps(0); };
+    ws.onopen  = () => { setConnected(true); if (reconnectRef.current) { clearTimeout(reconnectRef.current); reconnectRef.current = null; } };
+    ws.onclose = () => {
+      setConnected(false); setFps(0);
+      // auto-reconnect after 3 seconds
+      reconnectRef.current = setTimeout(() => connect(), 3000);
+    };
+    ws.onerror = () => { setConnected(false); setFps(0); };
     ws.onmessage = ({ data }) => {
       const msg = JSON.parse(data);
-      if (imgRef.current && msg.frame)
-        imgRef.current.src = `data:image/jpeg;base64,${msg.frame}`;
+      if (msg.frame) setImgSrc(`data:image/jpeg;base64,${msg.frame}`);
       setPersons(msg.persons || []);
       setFps(msg.fps || 0);
     };
-  }
+  }, []);
 
-  function disconnect() {
-    if (wsRef.current) { wsRef.current.close(); wsRef.current = null; }
-    setConnected(false); setPersons([]); setFps(0);
-    if (imgRef.current) imgRef.current.src = "";
-  }
+  const disconnect = useCallback(() => {
+    if (reconnectRef.current) { clearTimeout(reconnectRef.current); reconnectRef.current = null; }
+    if (wsRef.current) {
+      wsRef.current.onclose = null;
+      wsRef.current.close();
+      wsRef.current = null;
+    }
+    setConnected(false); setPersons([]); setFps(0); setImgSrc("");
+  }, []);
 
-  // Auto-connect on mount
-  useEffect(() => { connect(); return disconnect; }, []);
+  useEffect(() => {
+    connect();
+    return () => {
+      if (wsRef.current) { wsRef.current.onclose = null; wsRef.current.close(); }
+    };
+  }, []);
 
   const fetchEvents = useCallback(async () => {
     const res = await fetch(`${API}/events?limit=20`);
@@ -52,7 +69,7 @@ export function useElderSafe() {
 
   const startStream = async () => {
     await fetch(`${API}/stream/start`, { method: "POST" });
-    connect();  // reconnect WebSocket so backend opens fresh camera
+    connect();
   };
 
   const stopStream = async () => {
@@ -60,5 +77,5 @@ export function useElderSafe() {
     disconnect();
   };
 
-  return { imgRef, persons, fps, events, connected, ackEvent, startStream, stopStream };
+  return { imgSrc, persons, fps, events, connected, ackEvent, startStream, stopStream };
 }

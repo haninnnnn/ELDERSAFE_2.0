@@ -1,4 +1,4 @@
-import smtplib, os
+import asyncio, smtplib, os
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 from email.mime.image import MIMEImage
@@ -121,7 +121,11 @@ async def send_email(subject: str, body: str, event_type: str = "", track_id: in
             img.add_header("Content-Disposition", "inline", filename="snapshot.jpg")
             msg.attach(img)
 
-    with smtplib.SMTP(settings.smtp_host, settings.smtp_port) as s:
-        s.starttls()
-        s.login(settings.smtp_user, settings.smtp_pass)
-        s.send_message(msg)
+    def _send():
+        with smtplib.SMTP(settings.smtp_host, settings.smtp_port) as s:
+            s.starttls()
+            s.login(settings.smtp_user, settings.smtp_pass)
+            s.send_message(msg)
+
+    loop = asyncio.get_event_loop()
+    await loop.run_in_executor(None, _send)

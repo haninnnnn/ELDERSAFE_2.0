@@ -2,8 +2,12 @@ from fastapi import APIRouter, Depends, HTTPException
 from fastapi.responses import FileResponse
 from sqlalchemy.orm import Session
 from typing import Optional
+import re
+from pathlib import Path
+
 from backend.db.session import get_db
 from backend.db import crud
+from backend.db.models import Person, Alert, Event
 from backend.api.schemas import PersonOut, PersonUpdate, EventOut, ActivityLogOut, AlertOut, StreamStatus
 import backend.main as app_state
 
@@ -11,11 +15,11 @@ router = APIRouter(prefix="/api")
 
 @router.get("/persons", response_model=list[PersonOut])
 def list_persons(db: Session = Depends(get_db)):
-    return db.query(__import__("backend.db.models", fromlist=["Person"]).Person).all()
+    return db.query(Person).all()
 
 @router.patch("/persons/{track_id}", response_model=PersonOut)
 def update_person(track_id: int, body: PersonUpdate, db: Session = Depends(get_db)):
-    p = db.query(__import__("backend.db.models", fromlist=["Person"]).Person).filter_by(track_id=track_id).first()
+    p = db.query(Person).filter_by(track_id=track_id).first()
     if not p:
         raise HTTPException(404, "Person not found")
     p.label = body.label
@@ -41,8 +45,7 @@ def list_logs(track_id: Optional[int] = None, limit: int = 100, db: Session = De
 
 @router.get("/alerts", response_model=list[AlertOut])
 def list_alerts(db: Session = Depends(get_db)):
-    return db.query(__import__("backend.db.models", fromlist=["Alert"]).Alert).order_by(
-        __import__("backend.db.models", fromlist=["Alert"]).Alert.sent_at.desc()).limit(100).all()
+    return db.query(Alert).order_by(Alert.sent_at.desc()).limit(100).all()
 
 @router.post("/stream/start")
 def start_stream():
@@ -70,12 +73,8 @@ def get_source():
 def set_source(body: dict):
     src = body.get("source", "").strip()
     if not src:
-        from fastapi import HTTPException
         raise HTTPException(400, "source required")
     app_state.current_source = src
-    # persist to .env
-    import re
-    from pathlib import Path
     env_path = Path(__file__).parent.parent.parent / ".env"
     text = env_path.read_text()
     text = re.sub(r"^CAMERA_SOURCE=.*$", f"CAMERA_SOURCE={src}", text, flags=re.MULTILINE)
@@ -84,7 +83,6 @@ def set_source(body: dict):
 
 @router.get("/snapshot/{event_id}")
 def get_snapshot(event_id: int, db: Session = Depends(get_db)):
-    from backend.db.models import Event
     ev = db.query(Event).filter_by(id=event_id).first()
     if not ev or not ev.snapshot_path:
         raise HTTPException(404, "Snapshot not found")
@@ -92,7 +90,6 @@ def get_snapshot(event_id: int, db: Session = Depends(get_db)):
 
 @router.get("/snapshots")
 def list_snapshots():
-    from pathlib import Path
     snap_dir = Path("snapshots")
     if not snap_dir.exists():
         return []
@@ -102,7 +99,6 @@ def list_snapshots():
 
 @router.get("/snapshots/{filename}")
 def get_snapshot_file(filename: str):
-    from pathlib import Path
     path = Path("snapshots") / filename
     if not path.exists():
         raise HTTPException(404)

@@ -20,9 +20,9 @@ const TABS = [
 ];
 
 export default function App() {
-  const { imgRef, persons, fps, events, connected, ackEvent, startStream, stopStream } = useElderSafe();
+  const { imgSrc, persons, fps, events, connected, ackEvent, startStream, stopStream } = useElderSafe();
   const [tab, setTab] = useState("live");
-  const unacked = events.filter(e => !e.acknowledged).length;
+  const unacked = events.filter(e => !e.acknowledged && e.event_type === "fall").length;
 
   return (
     <div className="app">
@@ -56,7 +56,7 @@ export default function App() {
         {tab === "live" && (
           <main className="grid">
             <div className="col-left">
-              <LiveFeed imgRef={imgRef} fps={fps} connected={connected} />
+              <LiveFeed imgSrc={imgSrc} fps={fps} connected={connected} />
               <PersonTable persons={persons} />
             </div>
             <div className="col-right">
